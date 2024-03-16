@@ -24,7 +24,7 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        echo "wot??"
-        docker build . -t ghcr.io/blademccool/chws-website:${{ github.sha }}
-        echo "idk (wtf): ghcr.io/blademccool/chws-website:${{ github.sha }}" 
+        # does comments in here works?
+        docker build . --build-arg PAT=${{ secrets.PAT }} -t ghcr.io/blademccool/chws-website:${{ github.sha }}
+        # docker build . 
         docker push ghcr.io/blademccool/chws-website:${{ github.sha }}
