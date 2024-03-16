@@ -24,7 +24,8 @@ jobs:
 
     - name: Build and push Docker image
       run: |
-        # does comments in here works?
+        # build it, give it a secret that is defined in github repo secrets so we can have use a PAT that has permission to pull the resume repo.  
         docker build . --build-arg PAT=${{ secrets.PAT }} -t ghcr.io/blademccool/chws-website:${{ github.sha }}
-        # docker build . 
+        docker tag ghcr.io/blademccool/chws-website:${{ github.sha }} ghcr.io/blademccool/chws-website:latest
         docker push ghcr.io/blademccool/chws-website:${{ github.sha }}
+        docker push ghcr.io/blademccool/chws-website:latest
