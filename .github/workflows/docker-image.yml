@@ -22,10 +22,18 @@ jobs:
     - name: Log in to GitHub Docker Registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+      # build it, give it a secret that is defined in github repo secrets so we can have use a PAT that has permission to pull the resume repo.
     - name: Build and push Docker image
       run: |
-        # build it, give it a secret that is defined in github repo secrets so we can have use a PAT that has permission to pull the resume repo.  
         docker build . --build-arg PAT=${{ secrets.PAT }} -t ghcr.io/blademccool/chws-website:${{ github.sha }}
         docker tag ghcr.io/blademccool/chws-website:${{ github.sha }} ghcr.io/blademccool/chws-website:latest
         docker push ghcr.io/blademccool/chws-website:${{ github.sha }}
         docker push ghcr.io/blademccool/chws-website:latest
+
+      # deploy using our hosted app id in digital ocean app platform, using the digital ocean pat we created in our account over there.
+    - name: Deploy
+      run: >
+        curl -X POST \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer ${{ secrets.DIGITAL_OCEAN_PAT }}" \
+          "https://api.digitalocean.com/v2/apps/bb3fe71e-b9c2-4163-aca2-1d6dd0ac4c02/deployments"
