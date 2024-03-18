@@ -20,6 +20,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    # PAT below for WRITE_REGISTRY_PAT  has repo:all and write:packages, with no expiry so it should never really come up unless i want to make them start expiring (might be good for all PATs that are in use in parts of this project, including the digital ocean side of things, to expire at the same time so that i have to update them all together)
     - name: Log in to GitHub Docker Registry
       run: echo "${{ secrets.WRITE_REGISTRY_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
