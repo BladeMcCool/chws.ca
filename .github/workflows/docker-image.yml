@@ -34,12 +34,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-
+    if: github.event_name != 'pull_request' #do not deploy in PRs that are not merged!
     steps:
       # deploy using our hosted app id in digital ocean app platform, using the digital ocean pat we created in our account over there.
       # app id bb3fe71e-b9c2-4163-aca2-1d6dd0ac4c02 is our website component in digital ocean app platform.
     - name: Deploy
-      if: github.event_name != 'pull_request' #do not deploy in PRs that are not merged!
       run: >
         curl -X POST \
           -H "Content-Type: application/json" \
