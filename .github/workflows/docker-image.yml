@@ -31,6 +31,7 @@ jobs:
         docker push ghcr.io/blademccool/chws-website:latest
 
       # deploy using our hosted app id in digital ocean app platform, using the digital ocean pat we created in our account over there.
+      # app id bb3fe71e-b9c2-4163-aca2-1d6dd0ac4c02 is our website component in digital ocean app platform.
     - name: Deploy
       run: >
         curl -X POST \
