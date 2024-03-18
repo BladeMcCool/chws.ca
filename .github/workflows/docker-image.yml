@@ -27,14 +27,19 @@ jobs:
     - name: Build and push Docker image
       run: |
         docker build . -t ghcr.io/blademccool/chws-website:${{ github.sha }}
-        docker tag ghcr.io/blademccool/chws-website:${{ github.sha }} ghcr.io/blademccool/chws-website:latest
         docker push ghcr.io/blademccool/chws-website:${{ github.sha }}
+
+    # only tag latest when we merged or pushed directly. (dont do this on pull_request or repository_dispatch)
+    - name: Tag latest Docker image
+      if: github.event_name == 'push'
+      run: |
+        docker tag ghcr.io/blademccool/chws-website:${{ github.sha }} ghcr.io/blademccool/chws-website:latest
         docker push ghcr.io/blademccool/chws-website:latest
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name != 'pull_request' #do not deploy in PRs that are not merged!
+    if: github.event_name == 'repository_dispatch' || github.event_name == 'push' #do not deploy in PRs that are not merged (do not deploy if event_name is pull_request)
     steps:
       # deploy using our hosted app id in digital ocean app platform, using the digital ocean pat we created in our account over there.
       # app id bb3fe71e-b9c2-4163-aca2-1d6dd0ac4c02 is our website component in digital ocean app platform.
