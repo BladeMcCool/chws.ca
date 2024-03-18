@@ -30,9 +30,9 @@ jobs:
         docker build . -t ghcr.io/blademccool/chws-website:${{ github.sha }}
         docker push ghcr.io/blademccool/chws-website:${{ github.sha }}
 
-    # only tag latest when we merged or pushed directly. (dont do this on pull_request or repository_dispatch)
+    # if we're going to run deploy: below, we should tag latest (do it for repository_dispatch and push event, do not do it for pull_request)
     - name: Tag latest Docker image
-      if: github.event_name == 'push'
+      if: github.event_name == 'repository_dispatch' || github.event_name == 'push'
       run: |
         docker tag ghcr.io/blademccool/chws-website:${{ github.sha }} ghcr.io/blademccool/chws-website:latest
         docker push ghcr.io/blademccool/chws-website:latest
