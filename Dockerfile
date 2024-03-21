@@ -1,5 +1,6 @@
 # First stage: Obtain the built project files from a pre-built image
-FROM ghcr.io/blademccool/resume:master as builder
+ARG RESUME_REF=master
+FROM ghcr.io/blademccool/resume:${RESUME_REF} as builder
 
 # Second stage: Setup runtime container
 # Use the Nginx image from Docker Hub as the base image

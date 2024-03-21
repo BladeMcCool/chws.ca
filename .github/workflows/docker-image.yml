@@ -27,7 +27,8 @@ jobs:
     # build it - i seemed to get an error with cross repo registry stuff using the GITHUB_TOKEN var for the pw in the registry login above, so i set up a PAT that definitely has permission and it seems to work for all the operations. meh
     - name: Build and push Docker image
       run: |
-        docker build . -t ghcr.io/blademccool/chws-website:${{ github.sha }}
+        source deps.env
+        docker build . -t ghcr.io/blademccool/chws-website:${{ github.sha }} --build-arg RESUME_REF=$RESUME_REF
         docker push ghcr.io/blademccool/chws-website:${{ github.sha }}
 
     # if we're going to run deploy: below, we should tag latest (do it for repository_dispatch and push event, do not do it for pull_request)
