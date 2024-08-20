@@ -28,6 +28,15 @@ jobs:
     - name: Build and push Docker image
       run: |
         source deps.env
+        # prepare docker network so gotenberg can talk to resume container.
+        docker network create my_network
+        # run resume container
+        docker run --rm -p 3000:3000 -d --name resume --network my_network ghcr.io/blademccool/resume:master
+        # run gotenberg
+        docker run --rm -p 80:80 -d --network my_network gotenberg/gotenberg:8 gotenberg --api-port=80 --api-timeout=10s --libreoffice-disable-routes --log-level=debug
+        # direct gotenberg to produce a pdf and output into ./web which will be bundled into the docker image.
+        curl -v --request POST http://localhost:80/forms/chromium/convert/url --form url=http://resume:3000 -o ./web/Chris_Hagglund_Resume.pdf
+        # modify docker build command below to include this pdf.
         docker build . -t ghcr.io/blademccool/chws-website:${{ github.sha }} --build-arg RESUME_REF=$RESUME_REF
         docker push ghcr.io/blademccool/chws-website:${{ github.sha }}
 
