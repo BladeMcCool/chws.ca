@@ -46,6 +46,7 @@ jobs:
         # direct gotenberg to produce a pdf and output into ./web which will be bundled into the docker image.
         curl -v --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume:3000?jsonserver=jsonserver" -o ./web/Chris_Hagglund_Resume.pdf
         # place correct resumedata into local file system for bundling into final site
+        mkdir -p replaceinbuild
         curl http://localhost:3002?layout=default -o replaceinbuild/resumedata.json        
         # bundle the site up in an nginx image, with the web and resume files copied in
         docker build . -t ghcr.io/blademccool/chws-website:${{ github.sha }} --build-arg RESUME_REF=$RESUME_REF
