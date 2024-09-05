@@ -29,22 +29,18 @@ jobs:
       run: |
         source deps.env
 
-        # i believe we will need to pull down the actual resumedata here from the private project.
-        # will have to overwrite the generic resumedata.json that is part of the base resume project with the proper stuff
-        # such that both gotenberg render and website build reflect the correct data.
-        # i'm thinking get the file data somehow from the correct ref of the private project (this gonna need to be available in deps.env), 
-        # then copy it into the resume container we run below? and have the Dockerfile of this project also overwrite the resumedata.json in the react project build 
-
+        # todo: docker compose this stuff perhaps ....
         # prepare docker network so gotenberg can talk to resume container.
         docker network create my_network
         # run json server container which will serve the private resume data (its about to become not private, but just the subset we want to publish)
         docker run -d -p 3002:3002 --name jsonserver --network my_network ghcr.io/blademccool/resumedata:$RESUMEDATA_REF
         # run resume container
-        docker run --rm -p 3000:3000 -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
+        # docker run --rm -p 3000:3000 -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
+        docker run --rm -p 3000:80 -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
         # run gotenberg
         docker run --rm -p 80:80 -d --network my_network gotenberg/gotenberg:8 gotenberg --api-port=80 --api-timeout=10s --libreoffice-disable-routes --log-level=debug
         # direct gotenberg to produce a pdf and output into ./web which will be bundled into the docker image.
-        curl -v --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume:3000?jsonserver=jsonserver&baseline=chrono" -o ./web/Chris_Hagglund_Resume.pdf
+        curl -v --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume:3000?jsonserver=jsonserver:3002&baseline=chrono" -o ./web/Chris_Hagglund_Resume.pdf
         # place correct resumedata into local file system for bundling into final site
         mkdir -p replaceinbuild
         curl http://localhost:3002?baseline=chrono -o replaceinbuild/resumedata.json
