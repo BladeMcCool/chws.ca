@@ -27,6 +27,8 @@ jobs:
     # build it - i seemed to get an error with cross repo registry stuff using the GITHUB_TOKEN var for the pw in the registry login above, so i set up a PAT that definitely has permission and it seems to work for all the operations. meh
     - name: Build and push Docker image
       run: |
+        set -e  # Exit on any command failure
+
         source deps.env
 
         # todo: docker compose this stuff perhaps ....
@@ -40,7 +42,21 @@ jobs:
         # run gotenberg
         docker run --rm -p 80:80 -d --network my_network gotenberg/gotenberg:8 gotenberg --api-port=80 --api-timeout=10s --libreoffice-disable-routes --log-level=debug
         # direct gotenberg to produce a pdf and output into ./web which will be bundled into the docker image.
-        curl -v --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" -o ./web/Chris_Hagglund_Resume.pdf
+        curl -v --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" -o ./web/Chris_Hagglund_Resume.pdf  || { echo "PDF generation failed"; exit 1; }
+        echo "PDF generated successfully. (contents remain to be verified)"
+
+        # Run Ghostscript to convert the PDF to text and check for errors
+        docker run --rm -v $PWD/web:/workspace minidocks/ghostscript:latest \
+          gs -sDEVICE=txtwrite -o /workspace/output.txt /workspace/Chris_Hagglund_Resume.pdf
+
+        if grep -q "Uncaught runtime errors" ./web/output.txt; then
+          echo "Ghostscript found 'Uncaught runtime errors' in the PDF, failing the pipeline."
+          exit 1
+        else
+          echo "No 'Uncaught runtime errors' found in the PDF."
+        fi
+        cat web/output.txt #inspect it
+
         # place correct resumedata into local file system for bundling into final site
         mkdir -p replaceinbuild
         curl http://localhost:3002?baseline=chrono -o replaceinbuild/resumedata.json
