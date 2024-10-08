@@ -49,6 +49,7 @@ jobs:
         docker run --rm -v $PWD/web:/workspace minidocks/ghostscript:latest \
           gs -sDEVICE=txtwrite -o /workspace/output.txt /workspace/Chris_Hagglund_Resume.pdf
 
+        # maybe also check for "Please check the data and try again." if that kind of error from the React project ever happens.
         if grep -q "Uncaught runtime errors" ./web/output.txt; then
           echo "Ghostscript found 'Uncaught runtime errors' in the PDF, failing the pipeline."
           exit 1
