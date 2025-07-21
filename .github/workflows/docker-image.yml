@@ -50,6 +50,8 @@ jobs:
         sleep 10
         echo "woke up (2)"
         
+        docker ps
+        
         #debug output confirm react app is running (should print some HTML about needing JS to run etc.)
         curl -v http://localhost:3000?jsonserver=localhost:3002&baseline=chrono
         
