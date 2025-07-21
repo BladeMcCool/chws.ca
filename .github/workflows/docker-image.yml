@@ -42,7 +42,7 @@ jobs:
         # run gotenberg
         docker run --rm -p 80:80 -d --network my_network gotenberg/gotenberg:8 gotenberg --api-port=80 --api-timeout=10s --libreoffice-disable-routes --log-level=debug
         # direct gotenberg to produce a pdf and output into ./web which will be bundled into the docker image.
-        curl -v --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" -o ./web/Chris_Hagglund_Resume.pdf  || { echo "PDF generation failed"; exit 1; }
+        curl -v --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" --form "waitForExpression=window.contentLoaded === true" -o ./web/Chris_Hagglund_Resume.pdf  || { echo "PDF generation failed"; exit 1; }
         echo "PDF generated successfully. (contents remain to be verified)"
 
         # Run Ghostscript to convert the PDF to text and check for errors
