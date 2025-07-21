@@ -44,12 +44,6 @@ jobs:
         docker run --rm -p 3000:80 -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
         #docker run --rm -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
 
-        echo "try to sleep for 10s before trying to talk to things (json server or nginx resume react app server)"
-        sleep 10
-        echo "woke up"
-        
-        docker ps
-        
         #debug output confirm json server is running (should print some HTML about needing JS to run etc.)
         echo "test jsonserver"
         # curl -i --fail-with-body http://localhost:3002?baseline=chrono
@@ -64,11 +58,21 @@ jobs:
         curl -i --fail-with-body http://localhost:3000
         
         # run gotenberg
-        docker run --rm -p 80:80 -d --network my_network gotenberg/gotenberg:8 gotenberg --api-port=80 --api-timeout=10s --libreoffice-disable-routes --log-level=debug
+        docker run --rm -p 80:80 -d --name gotenberg --network my_network gotenberg/gotenberg:8 gotenberg --api-port=80 --api-timeout=10s --libreoffice-disable-routes --log-level=debug
+
+        echo "try to sleep for 10s before trying to talk to things (json server or nginx resume react app server and gotenberg)"
+        sleep 10
+        echo "woke up"
+        
+        docker ps
+
         # direct gotenberg to produce a pdf and output into ./web which will be bundled into the docker image.
         # curl -v --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" --form "waitForExpression=window.contentLoaded===true" -o ./web/Chris_Hagglund_Resume.pdf  || { echo "PDF generation failed"; exit 1; }
-        curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" -o ./web/Chris_Hagglund_Resume.pdf  || { echo "PDF generation failed"; exit 1; }
-        echo "PDF generated successfully. (contents remain to be verified)"
+        # curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" -o ./web/Chris_Hagglund_Resume.pdf  || { echo "PDF generation failed"; exit 1; }
+        # echo "PDF generated successfully. (contents remain to be verified)"
+        
+        curl -i --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" -o ./web/Chris_Hagglund_Resume.pdf
+        docker logs gotenberg        
 
         # Run Ghostscript to convert the PDF to text and check for errors
         docker run --rm -v $PWD/web:/workspace minidocks/ghostscript:latest \
