@@ -40,8 +40,8 @@ jobs:
         
         # docker run -d -p 3003:3002 --name jsonserver2 --network host ghcr.io/blademccool/resumedata:$RESUMEDATA_REF
 
-        # run resume container
-        docker run --rm -p 3000:3000 -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
+        # run resume container - switched to nginx which run on port 80 in the container but i still want to access via port 3000 locally 
+        docker run --rm -p 3000:80 -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
         #docker run --rm -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
 
         echo "try to sleep for 10s before trying to talk to things (json server or nginx resume react app server)"
