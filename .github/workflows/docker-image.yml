@@ -38,9 +38,17 @@ jobs:
         # run json server container which will serve the private resume data (its about to become not private, but just the subset we want to publish)
         docker run -d -p 3002:3002 --name jsonserver --network my_network ghcr.io/blademccool/resumedata:$RESUMEDATA_REF
 
+        echo "try to sleep for 10s before trying to talk to jsonserver"
+        sleep 10
+        echo "woke up (1)"
+        
         # run resume container
         docker run --rm -p 3000:3000 -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
         #docker run --rm -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
+
+        echo "try to sleep for 10s before trying to talk to nginx resume react app server"
+        sleep 10
+        echo "woke up (2)"
         
         #debug output confirm react app is running (should print some HTML about needing JS to run etc.)
         curl -v http://localhost:3000?jsonserver=localhost:3002&baseline=chrono
