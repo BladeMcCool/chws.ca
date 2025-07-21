@@ -40,30 +40,55 @@ jobs:
         
         # docker run -d -p 3003:3002 --name jsonserver2 --network host ghcr.io/blademccool/resumedata:$RESUMEDATA_REF
 
-        # run resume container - switched to nginx which run on port 80 in the container but i still want to access via port 3000 locally 
+        # run resume container - switched to nginx which run on port 80 in the container but i still want to be able to access via port 3000 locally 
         docker run --rm -p 3000:80 -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
         #docker run --rm -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
 
         #debug output confirm json server is running (should print some HTML about needing JS to run etc.)
-        echo "test jsonserver"
+        # echo "test jsonserver"
         # curl -i --fail-with-body http://localhost:3002?baseline=chrono
-        curl -i --fail-with-body http://localhost:3002?baseline=chrono
+        # curl -i --fail-with-body http://localhost:3002?baseline=chrono
         
-        echo "totally got here .... (sleep)"
-        sleep 10
-        echo "woke up moar"
+        # echo "totally got here .... (sleep)"
+        # sleep 10
+        # echo "woke up moar"
         
         #debug output confirm react app is running (should print some HTML about needing JS to run etc - just want to ensure it is being served and reachable)
-        echo "test react app HTML output"
-        curl -i --fail-with-body http://localhost:3000
+        # echo "test react app HTML output"
+        # curl -i --fail-with-body http://localhost:3000
         
         # run gotenberg
         docker run --rm -p 80:80 -d --name gotenberg --network my_network gotenberg/gotenberg:8 gotenberg --api-port=80 --api-timeout=10s --libreoffice-disable-routes --log-level=debug
 
-        echo "try to sleep for 10s before trying to talk to things (json server or nginx resume react app server and gotenberg)"
-        sleep 10
-        echo "woke up"
+        # echo "try to sleep for 10s before trying to talk to things (json server or nginx resume react app server and gotenberg)"
+        # sleep 10
+        # echo "woke up"
+              
+        check_url() {
+          local url=$1
+          local name=$2
+          local max_retries=20
+          local delay=1
+          local i=0
         
+          echo "Waiting for $name at $url ..."
+        
+          until curl --silent --head --fail "$url" | grep -q "HTTP/.* 2[0-9][0-9]"; do
+            if (( i++ >= max_retries )); then
+              echo "$name failed to become healthy after $((max_retries * delay)) seconds"
+              exit 1
+            fi
+            sleep $delay
+          done
+        
+          echo "$name is healthy ✅"
+        }
+        
+        # Run checks
+        check_url "http://localhost:3002?baseline=chrono" "JSON Server"
+        check_url "http://localhost:3000" "React App (Nginx)"
+        check_url "http://localhost:80/health" "Gotenberg"
+
         docker ps
 
         # direct gotenberg to produce a pdf and output into ./web which will be bundled into the docker image.
@@ -75,7 +100,7 @@ jobs:
         # curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" --form "waitForExpression=window.contentLoaded===true" -o ./web/Chris_Hagglund_Resume.pdf || { echo "PDF generation failed"; exit 1; }
         # docker logs gotenberg        
         if ! curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url \
-          --form "url=http://bustedresume?jsonserver=jsonserver:3002&baseline=chrono" \
+          --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" \
           --form "waitForExpression=window.contentLoaded===true" \
           -o ./web/Chris_Hagglund_Resume.pdf; then
         
