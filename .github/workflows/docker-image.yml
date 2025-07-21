@@ -38,32 +38,12 @@ jobs:
         # run json server container which will serve the private resume data (its about to become not private, but just the subset we want to publish)
         docker run -d -p 3002:3002 --name jsonserver --network my_network ghcr.io/blademccool/resumedata:$RESUMEDATA_REF
         
-        # docker run -d -p 3003:3002 --name jsonserver2 --network host ghcr.io/blademccool/resumedata:$RESUMEDATA_REF
-
         # run resume container - switched to nginx which run on port 80 in the container but i still want to be able to access via port 3000 locally 
         docker run --rm -p 3000:80 -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
-        #docker run --rm -d --name resume --network my_network ghcr.io/blademccool/resume:$RESUME_REF
 
-        #debug output confirm json server is running (should print some HTML about needing JS to run etc.)
-        # echo "test jsonserver"
-        # curl -i --fail-with-body http://localhost:3002?baseline=chrono
-        # curl -i --fail-with-body http://localhost:3002?baseline=chrono
-        
-        # echo "totally got here .... (sleep)"
-        # sleep 10
-        # echo "woke up moar"
-        
-        #debug output confirm react app is running (should print some HTML about needing JS to run etc - just want to ensure it is being served and reachable)
-        # echo "test react app HTML output"
-        # curl -i --fail-with-body http://localhost:3000
-        
         # run gotenberg
         docker run --rm -p 80:80 -d --name gotenberg --network my_network gotenberg/gotenberg:8 gotenberg --api-port=80 --api-timeout=10s --libreoffice-disable-routes --log-level=debug
 
-        # echo "try to sleep for 10s before trying to talk to things (json server or nginx resume react app server and gotenberg)"
-        # sleep 10
-        # echo "woke up"
-              
         check_url() {
           local url=$1
           local name=$2
@@ -89,16 +69,10 @@ jobs:
         check_url "http://localhost:3000" "React App (Nginx)"
         check_url "http://localhost:80/health" "Gotenberg"
 
+        # log docker processes
         docker ps
-
-        # direct gotenberg to produce a pdf and output into ./web which will be bundled into the docker image.
-        # curl -v --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" --form "waitForExpression=window.contentLoaded===true" -o ./web/Chris_Hagglund_Resume.pdf  || { echo "PDF generation failed"; exit 1; }
-        # curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" -o ./web/Chris_Hagglund_Resume.pdf  || { echo "PDF generation failed"; exit 1; }
-        # echo "PDF generated successfully. (contents remain to be verified)"
         
-        # curl -i --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" -o ./web/Chris_Hagglund_Resume.pdf
-        # curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" --form "waitForExpression=window.contentLoaded===true" -o ./web/Chris_Hagglund_Resume.pdf || { echo "PDF generation failed"; exit 1; }
-        # docker logs gotenberg        
+        # generate the PDF
         if ! curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url \
           --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" \
           --form "waitForExpression=window.contentLoaded===true" \
@@ -125,13 +99,6 @@ jobs:
         else
           echo "No known error patterns found in the PDF."
         fi
-
-        # if grep -q "Uncaught runtime errors" ./web/output.txt; then
-        #   echo "Ghostscript found 'Uncaught runtime errors' in the PDF, failing the pipeline."
-        #   exit 1
-        # else
-        #   echo "No 'Uncaught runtime errors' found in the PDF."
-        # fi
 
         # place correct resumedata into local file system for bundling into final site
         mkdir -p replaceinbuild
