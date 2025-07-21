@@ -72,8 +72,17 @@ jobs:
         # echo "PDF generated successfully. (contents remain to be verified)"
         
         # curl -i --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" -o ./web/Chris_Hagglund_Resume.pdf
-        curl -i --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" --form "waitForExpression=window.contentLoaded===true" -o ./web/Chris_Hagglund_Resume.pdf
-        docker logs gotenberg        
+        # curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" --form "waitForExpression=window.contentLoaded===true" -o ./web/Chris_Hagglund_Resume.pdf || { echo "PDF generation failed"; exit 1; }
+        # docker logs gotenberg        
+        if ! curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url \
+          --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" \
+          --form "waitForExpression=window.contentLoaded===true" \
+          -o ./web/Chris_Hagglund_Resume.pdf; then
+        
+          echo "PDF generation failed - see the following gotenberg logs:"
+          docker logs gotenberg
+          exit 1
+        fi
 
         # Run Ghostscript to convert the PDF to text and check for errors
         docker run --rm -v $PWD/web:/workspace minidocks/ghostscript:latest \
