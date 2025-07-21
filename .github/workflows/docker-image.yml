@@ -75,7 +75,7 @@ jobs:
         # curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" --form "waitForExpression=window.contentLoaded===true" -o ./web/Chris_Hagglund_Resume.pdf || { echo "PDF generation failed"; exit 1; }
         # docker logs gotenberg        
         if ! curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url \
-          --form "url=http://noperesume?jsonserver=xxxjsonserver:3002&baseline=chrono" \
+          --form "url=http://resume?jsonserver=xxxjsonserver:3002&baseline=chrono" \
           --form "waitForExpression=window.contentLoaded===true" \
           -o ./web/Chris_Hagglund_Resume.pdf; then
         
@@ -91,12 +91,20 @@ jobs:
           gs -sDEVICE=txtwrite -o /workspace/output.txt /workspace/Chris_Hagglund_Resume.pdf
 
         # maybe also check for "Please check the data and try again." if that kind of error from the React project ever happens.
-        if grep -q "Uncaught runtime errors" ./web/output.txt; then
-          echo "Ghostscript found 'Uncaught runtime errors' in the PDF, failing the pipeline."
+        if grep -q -e "Uncaught runtime errors" -e "Error loading data:" ./web/output.txt; then
+          echo "Ghostscript found an error pattern in the PDF, failing the pipeline."
           exit 1
         else
-          echo "No 'Uncaught runtime errors' found in the PDF."
+          echo "No known error patterns found in the PDF."
         fi
+
+        # if grep -q "Uncaught runtime errors" ./web/output.txt; then
+        #   echo "Ghostscript found 'Uncaught runtime errors' in the PDF, failing the pipeline."
+        #   exit 1
+        # else
+        #   echo "No 'Uncaught runtime errors' found in the PDF."
+        # fi
+
         cat web/output.txt #inspect it
 
         # place correct resumedata into local file system for bundling into final site
