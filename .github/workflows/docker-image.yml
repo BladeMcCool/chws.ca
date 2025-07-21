@@ -75,7 +75,7 @@ jobs:
         # curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" --form "waitForExpression=window.contentLoaded===true" -o ./web/Chris_Hagglund_Resume.pdf || { echo "PDF generation failed"; exit 1; }
         # docker logs gotenberg        
         if ! curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url \
-          --form "url=http://resume?jsonserver=xxxjsonserver:3002&baseline=chrono" \
+          --form "url=http://bustedresume?jsonserver=jsonserver:3002&baseline=chrono" \
           --form "waitForExpression=window.contentLoaded===true" \
           -o ./web/Chris_Hagglund_Resume.pdf; then
         
@@ -89,6 +89,9 @@ jobs:
         # Run Ghostscript to convert the PDF to text and check for errors
         docker run --rm -v $PWD/web:/workspace minidocks/ghostscript:latest \
           gs -sDEVICE=txtwrite -o /workspace/output.txt /workspace/Chris_Hagglund_Resume.pdf
+
+        echo "PDF text contents:"
+        cat web/output.txt #inspect it
 
         # maybe also check for "Please check the data and try again." if that kind of error from the React project ever happens.
         if grep -q -e "Uncaught runtime errors" -e "Error loading data:" ./web/output.txt; then
@@ -104,8 +107,6 @@ jobs:
         # else
         #   echo "No 'Uncaught runtime errors' found in the PDF."
         # fi
-
-        cat web/output.txt #inspect it
 
         # place correct resumedata into local file system for bundling into final site
         mkdir -p replaceinbuild
