@@ -75,7 +75,7 @@ jobs:
         # curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url --form "url=http://resume?jsonserver=jsonserver:3002&baseline=chrono" --form "waitForExpression=window.contentLoaded===true" -o ./web/Chris_Hagglund_Resume.pdf || { echo "PDF generation failed"; exit 1; }
         # docker logs gotenberg        
         if ! curl -i --fail --request POST http://localhost:80/forms/chromium/convert/url \
-          --form "url=http://resume?jsonserver=xxxjsonserver:3002&baseline=chrono" \
+          --form "url=http://noperesume?jsonserver=xxxjsonserver:3002&baseline=chrono" \
           --form "waitForExpression=window.contentLoaded===true" \
           -o ./web/Chris_Hagglund_Resume.pdf; then
         
